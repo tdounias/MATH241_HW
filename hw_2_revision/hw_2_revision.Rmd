@@ -1,0 +1,62 @@
+---
+title: "hw_2_review"
+author: "Theodore Dounias"
+date: "February 24, 2017"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+```
+
+**Exercise 3.1**
+```{r, echo = FALSE, include = FALSE}
+library(mosaic)
+```
+We create the desired graph
+```{r}
+ggplot(Galton, aes(father, height)) +
+  geom_point(aes(col = sex)) +
+  geom_smooth(method = "lm") +
+  facet_wrap(~sex)
+```
+
+**Exercise 3.2**
+```{r}
+#Transform RailTrail weekday into more understandable form
+RailTrail1 <- RailTrail
+bool <- c("no", "yes")
+RailTrail1$weekday <- bool[RailTrail$weekday]
+#Plot graph
+ggplot(RailTrail1, aes(hightemp, volume, col = weekday)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~weekday)
+```
+
+**Exercise 4.8**
+We create an operational version of Teams, and add two variables using  the mutate function:
+```{r}
+Teams_op <- Teams %>%
+  mutate(BA = H/AB, SLG = (H + X2B + 2*X3B + 3*HR)/AB)
+```
+
+**Exercise 4.9**
+We first create the appropriatelly wrangled data set and then plot the graph:
+```{r}
+#Wrangle data
+Team_4.9 <- Teams_op %>%
+  filter(yearID >=1954)
+#Graph
+ggplot(Team_4.9, aes(x = yearID, y = SLG, col = lgID)) +
+  geom_point(alpha = .3) +
+  geom_smooth()
+```
+It appears that the American League has had typically higher SLG's than the National League. ~~whatever those are~~
+
+**Exercise 4.10**
+
+
