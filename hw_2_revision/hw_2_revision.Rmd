@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(dplyr)
 library(tidyverse)
+library(Lahman)
 ```
 
 **Exercise 3.1**
@@ -58,5 +59,38 @@ ggplot(Team_4.9, aes(x = yearID, y = SLG, col = lgID)) +
 It appears that the American League has had typically higher SLG's than the National League. ~~whatever those are~~
 
 **Exercise 4.10**
+First for MLB history:
+```{r}
+Top_teams <- Teams_op %>%
+  group_by(teamID) %>%
+  summarize(meanSLG = mean(SLG)) %>%
+  arrange(desc(meanSLG)) %>%
+  slice(1:15)
+Top_teams
+```
+And for recent history:
+```{r}
+Top_teams_recent <- Teams_op %>%
+  filter(yearID >=1969) %>%
+  group_by(teamID) %>%
+  summarize(meanSLG = mean(SLG)) %>%
+  arrange(desc(meanSLG)) %>%
+  slice(1:15)
+Top_teams_recent
+```
+
+**Exercise 4.11**
+Assuming that the world series is the most important thing in baseball, and that success of a season depends on rank, the following gives us the wanted results:
+```{r}
+#Create Dataset
+LATeam <- Teams_op %>%
+  filter(teamID %in% c("LAA", "CAL", "ANA")) 
+#Filter and print for "success" as measured by someone who does not know baseball
+LATeam$WSWin <- as.factor(LATeam$WSWin)
+LATeam %>%
+  select(Rank, yearID, teamID, WSWin) %>%
+  arrange(desc(WSWin), Rank) %>%
+  slice(1:10)
+```
 
 
