@@ -17,6 +17,7 @@ library(Lahman)
 #### PART 1
 
 **Exercise 5.1**
+
 First we wrangle the data:
 ```{r}
 cubs_hr <- Teams %>%
@@ -37,5 +38,75 @@ ggplot(cubs_hr, aes(x = yearID, y = number)) +
   labs(x = "Year", y = "Number of Home Runs", title = "Chicago Cubs Home Runs 1876 to 2015")
 
 ```
+
+**Exercise 5.6**
+
+We create the table (which I couldn't find otherwise):
+```{r}
+ds1 <- data.frame(id = c(1,2,3,1,2,3), 
+                  group = c("T", "T", "T", "C", "C", "C"), 
+                  vals = c(4.00, 6.00, 8.00, 5.00, 6.00, 10.00))
+
+```
+And then run the desired code:
+```{r}
+Treat <- filter(ds1, group == "T")
+Control <- filter(ds1, group == "C")
+all <- mutate(Treat, diff = Treat$vals - Control$vals)
+```
+This can lead to two issues. First, it assumes that the treat and control groups are all already perfectly matching by id. Second, if one person's data is missing, then all the subsequent diffs are going to be wrong. A better way to do this is by using the spread function to create a single data frame and then use the mutate command.
+```{r}
+tb <- ds1 %>%
+  spread(key = group, value = vals) %>%
+  mutate(diff = T - C)
+```
+
+**Exercise 5.7**
+
+We first create the dataset:
+```{r}
+ds57 <- data.frame(grp = c("A", "A", "B", "B"),
+                   sex = c("F", "M", "F", "M"),
+                   meanL = c(.22, .47, .33, .55),
+                   sdL = c(.11, .33, .11, .31),
+                   meanR = c(.34, .57, .40, .65),
+                   sdR = c(.08, .33, .07, .27))
+```
+And then use gather, separate, and unite to display it in the desired format:
+```{r}
+ds57 %>%
+  gather(type, val, 3:6) %>%
+  unite(type, sex, type, sep = ".") %>%
+  spread(type, val)
+```
+
+
+####PART II
+
+First we read the files into r using a similar command to the following for all 5 cds:
+```{r, eval = FALSE}
+cd5 <- read_tsv("C:/Users/tdounias[...]hw_3_tidy/data/CD5_VoterHistory_Jan2017.txt")
+```
+Then, from every voter file, we remove any columns we do not need. I did not do this intitially, however in retrospect should have been done at this stage to save processing power. What follows is the exact same technique, used for the final sample:
+```{r}
+voter_sample <- voter_sample %>%
+  select(VOTER_ID, BIRTH_DATE, EFF_REGN_DATE, CONFIDENTIAL, 
+         STATUS, PARTY_CODE, COUNTY, 41:65)
+```
+Then we use a gather command to gather all election days into one variable, called ELECTIONS, and if the person voted into anither one called VOTE. We arrange by VOTER_ID for readability:
+```{r}
+voter_sample <- voter_sample %>%
+  gather(key = ELECTION, value = VOTE, 8:32) %>%
+  arrange(VOTER_ID)
+```
+In this way we have our finalized voter sample file. We could do several more steps for further tidiness. For example, we could replace the dash values in VOTE with NA values as such:
+```{r}
+voter_sample$VOTE[voter_sample$VOTE == "-"] <- NA
+```
+We could also change the variables to factors, or edit the dates so they can be three different variables each. For this exercise what was required was only the above, however. If we wanted to we could use multiple as.factor() funcions to, for example, make the counties into factors. 
+
+
+
+
 
 
