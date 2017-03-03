@@ -83,24 +83,43 @@ ds57 %>%
 
 ####PART II
 
-First we read the files into r using a similar command to the following for all 5 cds:
-```{r, eval = FALSE}
-cd5 <- read_tsv("C:/Users/tdounias[...]hw_3_tidy/data/CD5_VoterHistory_Jan2017.txt")
-```
-Then, from every voter file, we remove any columns we do not need. I did not do this intitially, however in retrospect should have been done at this stage to save processing power. What follows is the exact same technique, used for the final sample:
-```{r}
-voter_sample <- voter_sample %>%
+First we read the files into r, and create the voter_sample variable. We cache this so as to not have to repeat the process:
+```{r, cache = TRUE, eval = FALSE}
+#Read tab delineated files
+cd1 <- read_tsv("C:/Users/tdounias/Desktop/Reed College/Spring 2017/MATH 241/Repositories/theodore_dounias/hw_3_tidy/data/CD1_VoterHistory_Jan2017.txt")
+cd2 <- read_tsv("C:/Users/tdounias/Desktop/Reed College/Spring 2017/MATH 241/Repositories/theodore_dounias/hw_3_tidy/data/CD2_VoterHistory_Jan2017.txt")
+cd3 <- read_tsv("C:/Users/tdounias/Desktop/Reed College/Spring 2017/MATH 241/Repositories/theodore_dounias/hw_3_tidy/data/CD3_VoterHistory_Jan2017.txt")
+cd4 <- read_tsv("C:/Users/tdounias/Desktop/Reed College/Spring 2017/MATH 241/Repositories/theodore_dounias/hw_3_tidy/data/CD4_VoterHistory_Jan2017.txt")
+cd5 <- read_tsv("C:/Users/tdounias/Desktop/Reed College/Spring 2017/MATH 241/Repositories/theodore_dounias/hw_3_tidy/data/CD5_VoterHistory_Jan2017.txt")
+
+#Put all files into one dataframe:
+ovr_file_large <- rbind(cd1, cd2, cd3, cd4, cd5)
+
+#Delete initial variables to conserve memory and p-power:
+rm(cd1, cd2, cd3, cd4, cd5)
+
+#Cut out unnecessary columns:
+ovr_file_large <- ovr_file_large %>%
   select(VOTER_ID, BIRTH_DATE, EFF_REGN_DATE, CONFIDENTIAL, 
          STATUS, PARTY_CODE, COUNTY, 41:65)
+
+#Set seed and take voter sample:
+set.seed(251981)
+voter_sample <- sample_n(ovr_file_large, size = 10^6)
+
+#Delete now unnecessary file:
+rm(ovr_file_large)
 ```
+
 Then we use a gather command to gather all election days into one variable, called ELECTIONS, and if the person voted into anither one called VOTE. We arrange by VOTER_ID for readability:
-```{r}
+```{r, eval = FALSE}
 voter_sample <- voter_sample %>%
   gather(key = ELECTION, value = VOTE, 8:32) %>%
   arrange(VOTER_ID)
 ```
+
 In this way we have our finalized voter sample file. We could do several more steps for further tidiness. For example, we could replace the dash values in VOTE with NA values as such:
-```{r}
+```{r, eval = FALSE}
 voter_sample$VOTE[voter_sample$VOTE == "-"] <- NA
 ```
 We could also change the variables to factors, or edit the dates so they can be three different variables each. For this exercise what was required was only the above, however. If we wanted to we could use multiple as.factor() funcions to, for example, make the counties into factors. 
