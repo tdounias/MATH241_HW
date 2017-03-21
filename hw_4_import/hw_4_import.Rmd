@@ -15,6 +15,7 @@ library(tidyr)
 library(dplyr)
 library(readr)
 library(ggplot2)
+library(readxl)
 ```
 
 ###DATASET 1
@@ -71,7 +72,7 @@ From the first graph we can see a clear decline in later years in the number of 
 
 ###DATASET TWO
 
-**CO2 Emission Data - World Bank**
+*CO2 Emission Data - World Bank*
 
 I wanted to cross reference all the CO2 emission data for the G8 countries.
 ```{r, error = FALSE, cache = TRUE}
@@ -98,9 +99,49 @@ ggplot(co2_stats, aes(x = year, y = Emission, col = Country.Code)) +
   geom_line() +
   facet_wrap(~Country.Code)
 ```
+   
 This is a handy cross tabulation of the data, with uses for quickly calculating how much each country emits.
 
 ##DATASET THREE
 
-**I have not completed this part of the assignment yet. I did not understand of a way to visualize the ORESTAR data, and spent too much time trying to import datasets that did not import for several reasons. Throughout this process, I tried about ten different import methods with varying success. I will attempt to have some sort of completed third part to this tomorrow.**
+*OreStar data for spending: Dennis Richardson for SecState Oregon*
+
+For the third dataset, I was interested in looking at an individual candidate and their spending patterns, in order to search for abnormalities. I concluded that a good place to star, especially for a state and not federal position, was to check how much money the candidate's campaign spent and received from other states, in order to then have someone reasearch any abnormal patterns for possible issues. I chose Republican Secretary of State Dennis Richardson. The code is explained within:
+```{r, error = FALSE, warning = FALSE}
+library(readxl)
+secstate_fin <- read_excel("C:\\Users\\tdounias\\Desktop\\Reed College\\Spring 2017\\MATH 241\\Repositories\\theodore_dounias\\hw_4_import\\data\\secstate_finance_oregon.xls",
+                 sheet = 1)
+
+#Tidy the money amounts
+secstate_df <- secstate_fin %>%
+  gather(key = "Type of Amount", value = "Amount", Amount, `Aggregate Amount`) %>%
+  select(-40, -48, -47, -15, -16, -18)
+
+#Tidy the employment status of the donor/receiver of the money
+secstate_df <- secstate_df %>%
+  mutate(`Employer Key` = ifelse(`Employ Ind` == "Y", "Employ Ind", 
+                                 ifelse(`Self Employ Ind` == "Y", "Self Employ Ind",
+                                        ifelse(`Emp State` == "NA", NA, "Traditionally Employed")))) %>%
+  select(-28, -27)
+
+#Create second dataframe for vizualizing. Here I want to filter and summarize for each state, and within that for each
+#type of exchange--contribution or expenditure
+secstate_viz <- secstate_df %>%
+  filter(`Sub Type` %in% c("Cash Expenditure", "Cash Contribution")) %>%
+  filter(`Type of Amount` == "Amount") %>%
+  group_by(`State`, `Sub Type`) %>%
+  summarize(totals = sum(Amount))
+
+#Rename NA values into NA == No Data Available
+secstate_viz[33:34, 1] <- "N/A"
+
+#Plot
+ggplot(secstate_viz, aes(x = `State`, y = log10(totals), col = `Sub Type`)) +
+  geom_point() +
+  facet_grid(`Sub Type`~.) +
+  labs(y = "Money Totals(log Scale)", labs = "Spending by State for Oregon SecState Richardson's Campaign")
+
+```
+   
+Based on this graph, most of the candidate's spending and expenditures were in Oregon. However, higher monetary exchanges in Nevada and Ohio, as well as any in the N/A category might merit further investigation. For this we might individually check each transaction in those states, check on who the donor/receiver is, see if they are former Oregon citizens, interested partes, Party executives etc. 
 
